@@ -1,17 +1,39 @@
 services:
-  goma-gateway:
-    image: jkaninda/goma-gateway
-    command: server -c goma.yaml
+  gateway:
+    image: jkaninda/goma-gateway:latest
+    container_name: goma-gateway
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "80:80"     # HTTP
+      - "443:443"   # HTTPS
+
+    volumes:
+      # Core configuration
+      - ./:/etc/goma
+
+      # Let's Encrypt certificates
+      - letsencrypt:/etc/letsencrypt
     healthcheck:
-      test: curl -f http://localhost:80/healthz || exit 1
+      test: ["CMD-SHELL", "curl -fsS http://localhost/healthz || exit 1"]
       interval: 30s
+      timeout: 10s
       retries: 5
       start_period: 20s
-      timeout: 10s
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./:/etc/goma/
-      - ./letsencrypt:/etc/letsencrypt
 
+    networks:
+      - web
+
+
+# -----------------------------
+# Networks
+# -----------------------------
+networks:
+  web:
+    external: false
+
+# -----------------------------
+# Volumes
+# -----------------------------
+volumes:
+  letsencrypt:
