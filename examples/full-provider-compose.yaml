@@ -1,0 +1,125 @@
+services:
+  # -----------------------------
+  # Goma Gateway (Data Plane)
+  # -----------------------------
+  # Main entry point for HTTP/HTTPS traffic.
+  # Handles routing, middleware, and TLS termination.
+  gateway:
+    image: jkaninda/goma-gateway:latest
+    container_name: goma-gateway
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "80:80"     # HTTP
+      - "443:443"   # HTTPS
+
+    volumes:
+      # Core configuration
+      - ./:/etc/goma
+
+      # Let's Encrypt certificates
+      - letsencrypt:/etc/letsencrypt
+
+      # Optional: dynamic providers output
+      # - providers:/etc/goma/providers
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+    networks:
+      - web
+
+  # -----------------------------
+  # Docker Provider (Optional)
+  # -----------------------------
+  # Generates dynamic configuration from Docker labels.
+  # Similar to Traefik's Docker provider.
+  # Remove if using static config or Goma Admin.
+  provider:
+    image: jkaninda/goma-docker-provider:latest
+    container_name: goma-provider
+    restart: unless-stopped
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - providers:/etc/goma/providers
+
+    environment:
+      GOMA_OUTPUT_DIR: /etc/goma/providers
+      GOMA_ENABLE_SWARM: "false"
+
+    networks:
+      - web
+
+  # -----------------------------
+  # Goma Admin (Control Plane) - Optional
+  # -----------------------------
+  # Web UI for managing Goma Gateway configuration.
+  # Includes built-in providers: Docker, Git, HTTP.
+  goma-admin:
+    image: jkaninda/goma-admin:latest
+    container_name: goma-admin
+    restart: unless-stopped
+    env_file: .env
+    labels:
+      - "goma.enable=true"
+      - "goma.port=9000"
+      - "goma.hosts=goma-admin.example.com"
+
+    volumes:
+      # Let's Encrypt certificates
+      - letsencrypt:/etc/letsencrypt
+      - providers:/etc/goma/providers
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    depends_on:
+      goma-postgres:
+        condition: service_healthy
+
+    networks:
+      - web
+
+  # -----------------------------
+  # PostgreSQL (Goma Admin DB) - Optional
+  # -----------------------------
+  goma-postgres:
+    image: postgres:18-alpine
+    container_name: goma-postgres
+    restart: unless-stopped
+    env_file: .env
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U goma"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - web
+
+# -----------------------------
+# Networks
+# -----------------------------
+# External network must be created manually:
+# docker network create web
+networks:
+  web:
+    external: true
+
+# -----------------------------
+# Volumes
+# -----------------------------
+volumes:
+  letsencrypt:
+  # Stores TLS certificates and ACME data
+  providers:
+  # Shared dynamic configuration (Docker/Git/HTTP providers)
+  postgres_data:
+  # Persistent database storage

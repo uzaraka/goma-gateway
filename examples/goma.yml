@@ -224,7 +224,7 @@ gateway:
     host: ''                # Must match a route hostname if exposed externally
     enableMetrics: true
     metricsPath: /metrics
-    enableReadiness: false  # Enables /readyz
+    enableReadiness: true  # Enables /readyz
     enableLiveness: true    # Enables /healthz
     middleware:
       metrics:
