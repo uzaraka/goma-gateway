@@ -23,11 +23,12 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	goutils "github.com/jkaninda/go-utils"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+
+	goutils "github.com/jkaninda/go-utils"
 )
 
 func (g *Goma) initTLS() (bool, []tls.Certificate) {
@@ -95,8 +96,15 @@ func (g *Goma) loadTLS() []tls.Certificate {
 
 	// Route certs
 	for _, route := range g.dynamicRoutes {
+		if route.TLS.Certificate.Cert == "" && route.TLS.Certificate.Key == "" {
+			continue
+		}
+		// Create new TlsCertificates from route.TLS
+		routeTLS := TlsCertificates{
+			Certificates: []TLS{route.TLS.Certificate},
+		}
 		wg.Add(1)
-		go loadCertificates(route.TLS, fmt.Sprintf("route: %s", route.Name))
+		go loadCertificates(routeTLS, fmt.Sprintf("route: %s", route.Name))
 	}
 	// Directory certs
 	// Load cert

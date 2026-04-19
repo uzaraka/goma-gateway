@@ -21,6 +21,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+
 	"github.com/jkaninda/goma-gateway/internal/middlewares"
 )
 
@@ -81,9 +82,9 @@ type Route struct {
 	// When enabled, requests to this route return the configured response
 	// instead of being forwarded to the backend.
 	Maintenance Maintenance `yaml:"maintenance,omitempty" json:"maintenance,omitempty"`
-	// TLS contains the TLS configuration for the route.
-	TLS      TlsCertificates `yaml:"tls,omitempty" json:"tls,omitempty"`
-	Security Security        `yaml:"security,omitempty" json:"security,omitempty"`
+	// TLS contains the TLS Certificate configuration for the route.
+	TLS      TlsCertificate `yaml:"tls,omitempty" json:"tls,omitempty"`
+	Security Security       `yaml:"security,omitempty" json:"security,omitempty"`
 	// DisableMetrics disables metrics collection for this route.
 	DisableMetrics bool `yaml:"disableMetrics,omitempty" json:"disableMetrics,omitempty"`
 	// Middlewares lists middleware names to apply to this route.
