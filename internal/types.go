@@ -21,10 +21,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/jkaninda/goma-gateway/internal/middlewares"
-	"github.com/jkaninda/goma-gateway/pkg/certmanager"
 	"strings"
 	"time"
+
+	"github.com/jkaninda/goma-gateway/internal/middlewares"
+	"github.com/jkaninda/goma-gateway/pkg/certmanager"
 )
 
 type TlsCertificates struct {
@@ -36,6 +37,9 @@ type TlsCertificates struct {
 	Keys       []TLS         `yaml:"keys,omitempty" json:"keys,omitempty"`
 	ClientAuth TLSClientAuth `yaml:"clientAuth,omitempty" json:"clientAuth,omitempty"`
 	Default    TLS           `yaml:"default,omitempty" json:"default,omitempty"`
+}
+type TlsCertificate struct {
+	Certificate TLS `yaml:"certificate,omitempty" json:"certificate,omitempty"`
 }
 
 type TLS struct {
